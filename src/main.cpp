@@ -1,34 +1,53 @@
 #include <iostream>
 #include <random>
+#include <vector>
 #include <cassert>
 
 class Roll {
 private:
-    std::mt19937 rng;  // Mersenne Twister PRNG
-    std::uniform_int_distribution<int> dist; // Uniform distribution for a six-sided die
+    std::mt19937 rng;
+    std::uniform_int_distribution<int> dist;
 
 public:
-    // Constructor to seed RNG
     Roll() : rng(std::random_device{}()), dist(1, 6) {}
 
-    // Roll two dice and return the sum
     int rollDice() {
         return dist(rng) + dist(rng);
     }
 };
 
-void testRoll() {
-    Roll roll;
-    
-    for (int i = 0; i < 10; ++i) {
-        int result = roll.rollDice();
-        assert(result >= 2 && result <= 12); // Validate result is in correct range
+class Shooter {
+private:
+    std::vector<Roll*> rolls; // Stores dynamically allocated Roll instances
+
+public:
+    ~Shooter() {
+        // Clean up dynamically allocated memory
+        for (auto roll : rolls) {
+            delete roll;
+        }
     }
 
-    std::cout << "All dice rolls passed the test!\n";
+    Roll* shoot() {
+        Roll* roll = new Roll(); // Dynamically allocate Roll instance
+        rolls.push_back(roll);   // Store in vector
+        return roll;             // Return pointer to Roll instance
+    }
+};
+
+void testShooter() {
+    Shooter shooter;
+
+    for (int i = 0; i < 10; ++i) {
+        Roll* roll = shooter.shoot(); // Get a dynamically allocated Roll instance
+        int result = roll->rollDice();
+        assert(result >= 2 && result <= 12); // Ensure valid roll range
+    }
+
+    std::cout << "All shooter tests passed!\n";
 }
 
 int main() {
-    testRoll();
+    testShooter();
     return 0;
 }
