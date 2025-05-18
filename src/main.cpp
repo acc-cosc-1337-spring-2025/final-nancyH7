@@ -1,72 +1,66 @@
 #include <iostream>
-#include <cassert>
+#include <vector>
+#include <ctime>
 
-// Enum to define possible roll outcomes
-enum class RollOutcome {
-    natural,    // 7 or 11 (ComeOutPhase)
-    craps,      // 2, 3, or 12 (ComeOutPhase)
-    point,      // Any other (ComeOutPhase) or matching point (PointPhase)
-    seven_out,  // 7 rolled in PointPhase
-    nopoint     // Any roll except point and 7 in PointPhase
+// RollOutcome enumeration for game outcomes
+enum class RollOutcome { natural, craps, seven_out, notpoint };
+
+// Die class for rolling a single die
+class Die {
+public:
+    Die() { std::srand(std::time(0)); } // Seed random number generator
+    int roll() { return (std::rand() % 6) + 1; } // Random number from 1 to 6
 };
 
-// Abstract base class
-class Phase {
+// Roll class to manage a roll of two dice
+class Roll {
+private:
+    int rolled_value;
 public:
-    virtual RollOutcome getOutcome(int rolled_value) const = 0; // Pure virtual method
-    virtual ~Phase() = default; // Virtual destructor
+    Roll(Die& die1, Die& die2) { 
+        rolled_value = die1.roll() + die2.roll();
+    }
+    int get_rolled_value() const { return rolled_value; }
 };
 
-// Derived ComeOutPhase class
-class ComeOutPhase : public Phase {
+// Shooter class to handle rolling dice
+class Shooter {
+private:
+    std::vector<int> rolled_values;
+    Die die1, die2;
 public:
-    RollOutcome getOutcome(int rolled_value) const override {
+    Roll* throw_die() {
+        Roll* roll = new Roll(die1, die2);
+        rolled_values.push_back(roll->get_rolled_value());
+        return roll;
+    }
+    void display_rolled_values() const {
+        std::cout << "Rolled values: ";
+        for (int val : rolled_values) std::cout << val << " ";
+        std::cout << std::endl;
+    }
+};
+
+// ComeOutPhase class to determine initial roll outcomes
+class ComeOutPhase {
+public:
+    RollOutcome get_outcome(int rolled_value) {
         if (rolled_value == 7 || rolled_value == 11) return RollOutcome::natural;
         else if (rolled_value == 2 || rolled_value == 3 || rolled_value == 12) return RollOutcome::craps;
-        else return RollOutcome::point;
+        return RollOutcome::notpoint;
     }
 };
 
-// Derived PointPhase class
-class PointPhase : public Phase {
+// PointPhase class to handle rolling in the point phase
+class PointPhase {
 private:
-    int point; // Stores the point value
-
+    int point;
 public:
-    explicit PointPhase(int point_value) : point(point_value) {}
+    PointPhase(int init_point) : point(init_point) {}
 
-    RollOutcome getOutcome(int rolled_value) const override {
-        if (rolled_value == point) return RollOutcome::point;
-        else if (rolled_value == 7) return RollOutcome::seven_out;
-        else return RollOutcome::nopoint;
+    RollOutcome get_outcome(int rolled_value) {
+        if (rolled_value == 7) return RollOutcome::seven_out;
+        else if (rolled_value == point) return RollOutcome::natural;
+        return RollOutcome::notpoint;
     }
 };
-
-// Test function for ComeOutPhase
-void testComeOutPhase() {
-    ComeOutPhase phase;
-    assert(phase.getOutcome(7) == RollOutcome::natural);
-    assert(phase.getOutcome(11) == RollOutcome::natural);
-    assert(phase.getOutcome(2) == RollOutcome::craps);
-    assert(phase.getOutcome(3) == RollOutcome::craps);
-    assert(phase.getOutcome(12) == RollOutcome::craps);
-    assert(phase.getOutcome(4) == RollOutcome::point);
-    assert(phase.getOutcome(10) == RollOutcome::point);
-    std::cout << "ComeOutPhase tests passed!\n";
-}
-
-// Test function for PointPhase
-void testPointPhase() {
-    PointPhase phase(5); // Set point value to 5
-    assert(phase.getOutcome(5) == RollOutcome::point);
-    assert(phase.getOutcome(7) == RollOutcome::seven_out);
-    assert(phase.getOutcome(4) == RollOutcome::nopoint);
-    assert(phase.getOutcome(9) == RollOutcome::nopoint);
-    std::cout << "PointPhase tests passed!\n";
-}
-
-int main() {
-    testComeOutPhase();
-    testPointPhase();
-    return 0;
-}
