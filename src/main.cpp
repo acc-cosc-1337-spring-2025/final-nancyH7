@@ -2,33 +2,33 @@
 #include <random>
 #include <cassert>
 
-class Die {
+class Roll {
 private:
-    std::mt19937 rng;  // random number generator
-    std::uniform_int_distribution<int> dist; // Uniform distribution between 1 and 6
+    std::mt19937 rng;  // Mersenne Twister PRNG
+    std::uniform_int_distribution<int> dist; // Uniform distribution for a six-sided die
 
 public:
-    // Constructor to seed RNG with a random device for true randomness
-    Die() : rng(std::random_device{}()), dist(1, 6) {}
+    // Constructor to seed RNG
+    Roll() : rng(std::random_device{}()), dist(1, 6) {}
 
-    // Roll the die and return a random value between 1 and 6
-    int roll() {
-        return dist(rng);
+    // Roll two dice and return the sum
+    int rollDice() {
+        return dist(rng) + dist(rng);
     }
 };
 
-void testDie() {
-    Die die;
+void testRoll() {
+    Roll roll;
     
     for (int i = 0; i < 10; ++i) {
-        int result = die.roll();
-        assert(result >= 1 && result <= 6); // Ensure roll is within valid range
+        int result = roll.rollDice();
+        assert(result >= 2 && result <= 12); // Validate result is in correct range
     }
 
-    std::cout << "All die rolls passed the test!\n";
+    std::cout << "All dice rolls passed the test!\n";
 }
 
 int main() {
-    testDie();
+    testRoll();
     return 0;
 }
